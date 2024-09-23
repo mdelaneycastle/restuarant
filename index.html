@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Find Nearest Restaurants.</title>
+    <title>Find Nearest Restaurants</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -13,17 +12,23 @@
         #results {
             margin-top: 20px;
         }
+        #voiceButton {
+            margin-top: 10px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
-    <h1>Find the 3 Closest Restaurants</h1>
+    <h1>Find the 3 Closest Restaurants.</h1>
 
     <form id="locationForm">
         <label for="locationInput">Enter an Address or Landmark:</label>
         <input type="text" id="locationInput" placeholder="Enter location..." required>
         <button type="submit">Search</button>
     </form>
+
+    <button id="voiceButton">🎤 Speak Address</button>
 
     <div id="results"></div>
 
@@ -76,6 +81,12 @@
             return distances.sort((a, b) => a.distance - b.distance).slice(0, 3);
         }
 
+        // Speech Synthesis to read the results
+        function speak(text) {
+            const speech = new SpeechSynthesisUtterance(text);
+            window.speechSynthesis.speak(speech);
+        }
+
         // Handle form submission
         document.getElementById('locationForm').addEventListener('submit', async function (event) {
             event.preventDefault();
@@ -94,14 +105,40 @@
                 // Find the closest restaurants
                 const closestRestaurants = findClosestRestaurants(coords.lat, coords.lng, restaurants);
 
-                // Display results
+                // Display and read results
+                let resultsText = 'Closest Restaurants: ';
                 resultsDiv.innerHTML = '<h2>Closest Restaurants:</h2>';
                 closestRestaurants.forEach(restaurant => {
-                    resultsDiv.innerHTML += `<p><strong>${restaurant.name}</strong><br>Address: ${restaurant.address}<br>Distance: ${restaurant.distance.toFixed(2)} km</p>`;
+                    const result = `<p><strong>${restaurant.name}</strong><br>Address: ${restaurant.address}<br>Distance: ${restaurant.distance.toFixed(2)} km</p>`;
+                    resultsDiv.innerHTML += result;
+                    resultsText += `${restaurant.name} at ${restaurant.address}, ${restaurant.distance.toFixed(2)} kilometers away. `;
                 });
+
+                speak(resultsText); // Read out the results
             } catch (error) {
                 resultsDiv.innerHTML = `<p>Error: ${error.message}</p>`;
+                speak('There was an error finding the location. Please try again.');
             }
+        });
+
+        // Voice recognition using Web Speech API
+        const voiceButton = document.getElementById('voiceButton');
+        const locationInput = document.getElementById('locationInput');
+
+        voiceButton.addEventListener('click', function () {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'en-US';
+            recognition.start();
+
+            recognition.onresult = function (event) {
+                const spokenText = event.results[0][0].transcript;
+                locationInput.value = spokenText;
+                recognition.stop();
+            };
+
+            recognition.onerror = function () {
+                alert('Error in voice recognition. Please try again.');
+            };
         });
     </script>
 
