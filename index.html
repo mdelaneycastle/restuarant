@@ -26,7 +26,7 @@
 </head>
 <body>
 
-    <h1>Find the 3 Closest Restaurants.</h1>
+    <h1>Find the 3 Closest Restaurants</h1>
 
     <form id="locationForm">
         <label for="locationInput">Enter an Address or Landmark:</label>
@@ -40,11 +40,14 @@
     <div id="results"></div>
 
     <script>
+        
+        <script>
         let isMuted = false; // Track mute status
+        let selectedVoice; // Declare selectedVoice here
 
         // Fetch restaurant data from the JSON file
         async function loadRestaurantData() {
-            const response = await fetch('restuarant1.json');
+            const response = await fetch('restaurant1.json');
             const data = await response.json();
             return data.restaurants.map(restaurant => {
                 return {
@@ -67,7 +70,6 @@
 
             return R * 2 * Math.asin(Math.sqrt(a));
         }
-
         // Geocoding API call to get latitude and longitude for a given address
         async function getCoordinates(address) {
             const apiKey = 'AIzaSyCMpouSpYZWmKOP6s67bRkpsKDzepmHTfA'; // Replace with your Google Maps Geocoding API key
