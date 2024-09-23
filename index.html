@@ -12,15 +12,21 @@
         #results {
             margin-top: 20px;
         }
-        #voiceButton {
+        #voiceButton, #muteButton {
             margin-top: 10px;
             cursor: pointer;
+            padding: 10px;
+            font-size: 16px;
+        }
+        #muteButton.muted {
+            background-color: red;
+            color: white;
         }
     </style>
 </head>
 <body>
 
-    <h1>Find the 3 Closest Restaurants.</h1>
+    <h1>Find the 3 Closest Restaurants</h1>
 
     <form id="locationForm">
         <label for="locationInput">Enter an Address or Landmark:</label>
@@ -29,10 +35,13 @@
     </form>
 
     <button id="voiceButton">🎤 Speak Address</button>
+    <button id="muteButton">🔈 Mute</button>
 
     <div id="results"></div>
 
     <script>
+        let isMuted = false; // Track mute status
+
         // Fetch restaurant data from the JSON file
         async function loadRestaurantData() {
             const response = await fetch('restuarant1.json');
@@ -83,9 +92,25 @@
 
         // Speech Synthesis to read the results
         function speak(text) {
-            const speech = new SpeechSynthesisUtterance(text);
-            window.speechSynthesis.speak(speech);
+            if (!isMuted) {
+                const speech = new SpeechSynthesisUtterance(text);
+                window.speechSynthesis.speak(speech);
+            }
         }
+
+        // Mute/Unmute functionality
+        const muteButton = document.getElementById('muteButton');
+        muteButton.addEventListener('click', function () {
+            isMuted = !isMuted; // Toggle mute status
+            if (isMuted) {
+                muteButton.textContent = '🔇 Unmute';
+                muteButton.classList.add('muted');
+                window.speechSynthesis.cancel(); // Stop ongoing speech if muted
+            } else {
+                muteButton.textContent = '🔈 Mute';
+                muteButton.classList.remove('muted');
+            }
+        });
 
         // Handle form submission
         document.getElementById('locationForm').addEventListener('submit', async function (event) {
@@ -114,7 +139,7 @@
                     resultsText += `${restaurant.name} at ${restaurant.address}, ${restaurant.distance.toFixed(2)} kilometers away. `;
                 });
 
-                speak(resultsText); // Read out the results
+                speak(resultsText); // Read out the results unless muted
             } catch (error) {
                 resultsDiv.innerHTML = `<p>Error: ${error.message}</p>`;
                 speak('There was an error finding the location. Please try again.');
