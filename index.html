@@ -30,7 +30,7 @@
     <script>
         // Fetch restaurant data from the JSON file
         async function loadRestaurantData() {
-            const response = await fetch('restaurants.json');
+            const response = await fetch('restaurant1.json');
             const data = await response.json();
             return data.restaurants.map(restaurant => {
                 return {
