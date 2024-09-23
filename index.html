@@ -26,7 +26,7 @@
 </head>
 <body>
 
-    <h1>Find the 3 Closest Restaurants</h1>
+    <h1>Find the 3 Closest Restaurants.</h1>
 
     <form id="locationForm">
         <label for="locationInput">Enter an Address or Landmark:</label>
@@ -90,12 +90,19 @@
             return distances.sort((a, b) => a.distance - b.distance).slice(0, 3);
         }
 
-        // Speech Synthesis to read the results
+        // Speech Synthesis to read the results with selected voice
         function speak(text) {
-            if (!isMuted) {
+            if (!isMuted && selectedVoice) {
                 const speech = new SpeechSynthesisUtterance(text);
+                speech.voice = selectedVoice; // Use the selected voice
                 window.speechSynthesis.speak(speech);
             }
+        }
+
+        // Populate the voice list and select Eddy (en-GB)
+        function setVoice() {
+            const voices = window.speechSynthesis.getVoices();
+            selectedVoice = voices.find(voice => voice.name === 'Eddy' && voice.lang === 'en-GB');
         }
 
         // Mute/Unmute functionality
@@ -165,6 +172,13 @@
                 alert('Error in voice recognition. Please try again.');
             };
         });
+
+        // Wait for voices to be loaded
+        if (window.speechSynthesis.onvoiceschanged !== undefined) {
+            window.speechSynthesis.onvoiceschanged = setVoice;
+        } else {
+            setVoice();
+        }
     </script>
 
 </body>
