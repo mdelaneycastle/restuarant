@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -26,7 +28,7 @@
 </head>
 <body>
 
-    <h1>Find the 3 Closest Restaurants.</h1>
+    <h1>Find the 3 Closest Restaurants</h1>
 
     <form id="locationForm">
         <label for="locationInput">Enter an Address or Landmark:</label>
@@ -41,11 +43,10 @@
 
     <script>
         let isMuted = false; // Track mute status
-        let selectedVoice; // Declare selectedVoice here
 
         // Fetch restaurant data from the JSON file
         async function loadRestaurantData() {
-            const response = await fetch('restuarant1.json');
+            const response = await fetch('restaurant1.json');
             const data = await response.json();
             return data.restaurants.map(restaurant => {
                 return {
@@ -91,19 +92,12 @@
             return distances.sort((a, b) => a.distance - b.distance).slice(0, 3);
         }
 
-        // Speech Synthesis to read the results with selected voice
+        // Speech Synthesis to read the results
         function speak(text) {
-            if (!isMuted && selectedVoice) {
+            if (!isMuted) {
                 const speech = new SpeechSynthesisUtterance(text);
-                speech.voice = selectedVoice; // Use the selected voice
                 window.speechSynthesis.speak(speech);
             }
-        }
-
-        // Populate the voice list and select Eddy (en-GB)
-        function setVoice() {
-            const voices = window.speechSynthesis.getVoices();
-            selectedVoice = voices.find(voice => voice.name === 'Eddy' && voice.lang === 'en-GB');
         }
 
         // Mute/Unmute functionality
@@ -173,14 +167,8 @@
                 alert('Error in voice recognition. Please try again.');
             };
         });
-
-        // Wait for voices to be loaded
-        if (window.speechSynthesis.onvoiceschanged !== undefined) {
-            window.speechSynthesis.onvoiceschanged = setVoice;
-        } else {
-            setVoice();
-        }
     </script>
 
 </body>
 </html>
+
