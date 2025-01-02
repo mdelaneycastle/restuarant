@@ -1,174 +1,42 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Find Nearest Restaurants</title>
+    <title>Ms Hayward's Pastries</title>
     <style>
         body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+        }
+        h1 {
             text-align: center;
+            font-size: 2rem;
+            margin: 10px;
+            color: #333;
         }
-        #results {
-            margin-top: 20px;
+        img {
+            max-width: 90%;
+            height: auto;
+            margin: 10px 0;
         }
-        #voiceButton, #muteButton {
-            margin-top: 10px;
-            cursor: pointer;
-            padding: 10px;
-            font-size: 16px;
-        }
-        #muteButton.muted {
-            background-color: red;
-            color: white;
+        p {
+            font-size: 1.2rem;
+            text-align: center;
+            color: #666;
         }
     </style>
 </head>
 <body>
-
-    <h1>Find the 3 Closest Restaurants</h1>
-
-    <form id="locationForm">
-        <label for="locationInput">Enter an Address or Landmark:</label>
-        <input type="text" id="locationInput" placeholder="Enter location..." required>
-        <button type="submit">Search</button>
-    </form>
-
-    <button id="voiceButton">🎤 Speak Address</button>
-    <button id="muteButton">🔈 Mute</button>
-
-    <div id="results"></div>
-
-    <script>
-        let isMuted = false; // Track mute status
-
-        // Fetch restaurant data from the JSON file
-        async function loadRestaurantData() {
-            const response = await fetch('restuarant1.json');
-            const data = await response.json();
-            return data.restaurants.map(restaurant => {
-                return {
-                    name: restaurant.restaurant_details.name,
-                    lat: restaurant.restaurant_details.coordinates.latitude,
-                    lon: restaurant.restaurant_details.coordinates.longitude,
-                    address: restaurant.restaurant_details.location
-                };
-            });
-        }
-
-        // Function to calculate the distance between two lat/lon points (Haversine formula)
-        function getDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371; // Radius of the Earth in kilometers
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLon = (lon2 - lon1) * Math.PI / 180;
-            const a =
-                0.5 - Math.cos(dLat) / 2 +
-                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * (1 - Math.cos(dLon)) / 2;
-
-            return R * 2 * Math.asin(Math.sqrt(a));
-        }
-
-        // Geocoding API call to get latitude and longitude for a given address
-        async function getCoordinates(address) {
-            const apiKey = 'AIzaSyCMpouSpYZWmKOP6s67bRkpsKDzepmHTfA'; // Replace with your Google Maps Geocoding API key
-            const response = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`);
-            const data = await response.json();
-            if (data.results && data.results.length > 0) {
-                return data.results[0].geometry.location;
-            } else {
-                throw new Error('Location not found');
-            }
-        }
-
-        // Function to find the 3 closest restaurants
-        function findClosestRestaurants(lat, lon, restaurants) {
-            const distances = restaurants.map(restaurant => {
-                const distance = getDistance(lat, lon, restaurant.lat, restaurant.lon);
-                return { ...restaurant, distance };
-            });
-
-            return distances.sort((a, b) => a.distance - b.distance).slice(0, 3);
-        }
-
-        // Speech Synthesis to read the results
-        function speak(text) {
-            if (!isMuted) {
-                const speech = new SpeechSynthesisUtterance(text);
-                window.speechSynthesis.speak(speech);
-            }
-        }
-
-        // Mute/Unmute functionality
-        const muteButton = document.getElementById('muteButton');
-        muteButton.addEventListener('click', function () {
-            isMuted = !isMuted; // Toggle mute status
-            if (isMuted) {
-                muteButton.textContent = '🔇 Unmute';
-                muteButton.classList.add('muted');
-                window.speechSynthesis.cancel(); // Stop ongoing speech if muted
-            } else {
-                muteButton.textContent = '🔈 Mute';
-                muteButton.classList.remove('muted');
-            }
-        });
-
-        // Handle form submission
-        document.getElementById('locationForm').addEventListener('submit', async function (event) {
-            event.preventDefault();
-
-            const location = document.getElementById('locationInput').value;
-            const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = '';
-
-            try {
-                // Get coordinates of the user's input location
-                const coords = await getCoordinates(location);
-
-                // Load restaurant data from JSON file
-                const restaurants = await loadRestaurantData();
-
-                // Find the closest restaurants
-                const closestRestaurants = findClosestRestaurants(coords.lat, coords.lng, restaurants);
-
-                // Display and read results
-                let resultsText = 'Closest Restaurants: ';
-                resultsDiv.innerHTML = '<h2>Closest Restaurants:</h2>';
-                closestRestaurants.forEach(restaurant => {
-                    const result = `<p><strong>${restaurant.name}</strong><br>Address: ${restaurant.address}<br>Distance: ${restaurant.distance.toFixed(2)} km</p>`;
-                    resultsDiv.innerHTML += result;
-                    resultsText += `${restaurant.name} at ${restaurant.address}, ${restaurant.distance.toFixed(2)} kilometers away. `;
-                });
-
-                speak(resultsText); // Read out the results unless muted
-            } catch (error) {
-                resultsDiv.innerHTML = `<p>Error: ${error.message}</p>`;
-                speak('There was an error finding the location. Please try again.');
-            }
-        });
-
-        // Voice recognition using Web Speech API
-        const voiceButton = document.getElementById('voiceButton');
-        const locationInput = document.getElementById('locationInput');
-
-        voiceButton.addEventListener('click', function () {
-            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-            recognition.lang = 'en-US';
-            recognition.start();
-
-            recognition.onresult = function (event) {
-                const spokenText = event.results[0][0].transcript;
-                locationInput.value = spokenText;
-                recognition.stop();
-            };
-
-            recognition.onerror = function () {
-                alert('Error in voice recognition. Please try again.');
-            };
-        });
-    </script>
-
+    <h1>Ms Hayward's Pastries</h1>
+    <img src="Hayward.jpg" alt="Ms Hayward">
+    <p>My Pasties</p>
+    <img src="pasties.jpg" alt="Pasties">
 </body>
 </html>
-
